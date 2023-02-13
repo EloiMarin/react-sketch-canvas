@@ -46,6 +46,7 @@ export interface CanvasProps {
   allowOnlyPointerType: string;
   style: React.CSSProperties;
   svgStyle: React.CSSProperties;
+  viewBox?: string;
 }
 
 export interface CanvasRef {
@@ -74,6 +75,7 @@ export const Canvas = React.forwardRef<CanvasRef, CanvasProps>((props, ref) => {
       borderRadius: '0.25rem',
     },
     svgStyle = {},
+    viewBox = '',
   } = props;
 
   const canvasRef = React.useRef<HTMLDivElement>(null);
@@ -91,9 +93,16 @@ export const Canvas = React.forwardRef<CanvasRef, CanvasProps>((props, ref) => {
       return { x: 0, y: 0 };
     }
 
+    const viewBoxFields = viewBox.split(' ');
+    const viewBoxWidth = parseFloat(viewBoxFields[2]);
+    const viewBoxHeight = parseFloat(viewBoxFields[3]);
+
+    const scaleX = viewBoxWidth ? viewBoxWidth / boundingArea.width : 1;
+    const scaleY = viewBoxHeight ? viewBoxHeight / boundingArea.height : 1;
+
     const point: Point = {
-      x: pointerEvent.pageX - boundingArea.left - scrollLeft,
-      y: pointerEvent.pageY - boundingArea.top - scrollTop,
+      x: (pointerEvent.pageX - boundingArea.left - scrollLeft) * scaleX,
+      y: (pointerEvent.pageY - boundingArea.top - scrollTop) * scaleY,
     };
 
     return point;
@@ -294,6 +303,7 @@ release drawing even when point goes out of canvas */
           ...svgStyle,
         }}
         id={id}
+        {...viewBox ? { viewBox } : {}}
       >
         <g id={`${id}__eraser-stroke-group`} display="none">
           <rect
